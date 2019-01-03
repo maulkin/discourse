@@ -74,29 +74,6 @@
           post=flaggedPost
           removeAfter=(action "removeAfter") }}
 
-        {{#if flaggedPost.postHidden}}
-          {{d-button
-            title="admin.flags.disagree_flag_unhide_post_title"
-            class="btn-default disagree-flag"
-            action=(action "disagree")
-            icon="thumbs-o-down"
-            label="admin.flags.disagree_flag_unhide_post"}}
-        {{else}}
-          {{d-button
-            title="admin.flags.disagree_flag_title"
-            class="btn-default disagree-flag"
-            action=(action "disagree")
-            icon="thumbs-o-down"
-            label="admin.flags.disagree_flag"}}
-        {{/if}}
-
-        {{d-button
-          class="btn-default defer-flag"
-          title="admin.flags.ignore_flag_title"
-          action=(action "defer")
-          icon="external-link-alt"
-          label="admin.flags.ignore_flag"}}
-
         {{admin-delete-flag-dropdown
           post=flaggedPost
           removeAfter=(action "removeAfter")}}

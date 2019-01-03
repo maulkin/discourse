@@ -1,0 +1,33 @@
+<div class='reviewable-filters'>
+  <div class='all-filters'>
+    <div class='reviewable-filter'>
+      <label>{{i18n "review.filters.type.title"}}</label>
+      {{combo-box
+        value=filterType
+        content=allTypes
+        none="review.filters.type.all"
+        optionValuePath="content.id"
+        optionLabelPath="content.name"}}
+    </div>
+
+    <div class='reviewable-filter'>
+      <label>{{i18n "review.filters.minimum_score"}}</label>
+      {{input value=filterScore class="score-filter"}}
+    </div>
+
+  </div>
+  {{d-button label="review.filters.apply" class="btn-primary" action=(action "apply")}}
+</div>
+
+{{#if reviewables}}
+  {{#load-more selector=".reviewable-item" action=(action "loadMore")}}
+    <div class='reviewables'>
+      {{#each reviewables as |r|}}
+        {{reviewable-item reviewable=r remove=(action "remove")}}
+      {{/each}}
+    </div>
+  {{/load-more}}
+  {{conditional-loading-spinner condition=reviewables.loadingMore}}
+{{else}}
+  {{i18n "review.none"}}
+{{/if}}

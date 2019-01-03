@@ -30,34 +30,6 @@ export default DropdownSelectBox.extend({
     const post = this.get("post");
     const canDeleteSpammer = this.get("canDeleteSpammer");
 
-    if (post.user_deleted) {
-      content.push({
-        icon: "far-eye",
-        id: "confirm-agree-restore",
-        action: () => this.send("perform", "restore"),
-        label: I18n.t("admin.flags.agree_flag_restore_post"),
-        description: I18n.t("admin.flags.agree_flag_restore_post_title")
-      });
-    } else {
-      if (!post.get("postHidden")) {
-        content.push({
-          icon: "far-eye-slash",
-          action: () => this.send("perform", "hide"),
-          id: "confirm-agree-hide",
-          label: I18n.t("admin.flags.agree_flag_hide_post"),
-          description: I18n.t("admin.flags.agree_flag_hide_post_title")
-        });
-      }
-    }
-
-    content.push({
-      icon: "thumbs-o-up",
-      id: "confirm-agree-keep",
-      description: I18n.t("admin.flags.agree_flag_title"),
-      action: () => this.send("perform", "keep"),
-      label: I18n.t("admin.flags.agree_flag")
-    });
-
     content.push({
       icon: "ban",
       id: "confirm-agree-suspend",
