@@ -26,7 +26,6 @@ unless ENV['NO_UPDATE']
   puts "travis_fold:start:bundle" if ENV["TRAVIS"]
 
   run_or_fail("bundle")
-  run_or_fail("bundle exec rake parallel:setup")
 
   puts "travis_fold:end:bundle" if ENV["TRAVIS"]
 end

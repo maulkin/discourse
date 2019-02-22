@@ -126,8 +126,8 @@ task 'docker:test' do
           if ENV["RSPEC_SEED"]
             params << "--seed #{ENV["RSPEC_SEED"]}"
           end
-          puts "bundle exec rake parallel:spec #{params.join(' ')}".strip
-          @good &&= run_or_fail("bundle exec rake parallel:spec #{params.join(' ')}".strip)
+          puts "bundle exec rspec #{params.join(' ')}".strip
+          @good &&= run_or_fail("bundle exec rspec #{params.join(' ')}".strip)
         end
 
         unless ENV["SKIP_PLUGINS"]
@@ -158,6 +158,14 @@ task 'docker:test' do
       end
     end
 
+    if ENV['PARALLEL_TESTS']
+      @good &&= run_or_fail("bundle exec rake parallel:create")
+      @good &&= run_or_fail("bundle exec rake parallel:prepare")
+      @good &&= run_or_fail("bundle exec rake parallel:migrate")
+      puts "bundle exec rake parallel:spec STARTED"
+      @good &&= run_or_fail("bundle exec rake parallel:spec")
+      puts "bundle exec rake parallel:spec ENDED"
+    end
   ensure
     puts "travis_fold:start:terminating" if ENV["TRAVIS"]
     puts "Terminating"
