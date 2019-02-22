@@ -126,8 +126,8 @@ task 'docker:test' do
           if ENV["RSPEC_SEED"]
             params << "--seed #{ENV["RSPEC_SEED"]}"
           end
-          puts "bundle exec rspec #{params.join(' ')}".strip
-          @good &&= run_or_fail("bundle exec rspec #{params.join(' ')}".strip)
+          puts "bundle exec rake parallel:spec #{params.join(' ')}".strip
+          @good &&= run_or_fail("bundle exec rake parallel:spec #{params.join(' ')}".strip)
         end
 
         unless ENV["SKIP_PLUGINS"]
