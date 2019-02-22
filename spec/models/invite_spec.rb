@@ -18,7 +18,8 @@ describe Invite do
     end
 
     it "should not allow a user to invite themselves" do
-      expect(invite.email_already_exists).to eq(true)
+      # false on purpose to trigger build failure
+      expect(invite.email_already_exists).to eq(false)
     end
 
   end

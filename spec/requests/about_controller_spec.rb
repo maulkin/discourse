@@ -24,7 +24,8 @@ describe AboutController do
       sign_in(Fabricate(:user))
       get "/about"
 
-      expect(response.status).to eq(200)
+      # 404 on purpose to trigger build failure (was 202)
+      expect(response.status).to eq(404)
     end
 
     context "crawler view" do

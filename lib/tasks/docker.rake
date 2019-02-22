@@ -119,6 +119,7 @@ task 'docker:test' do
         unless ENV["SKIP_CORE"]
           params = []
           params << "--profile"
+          params << "--fail-fast"
           if ENV["BISECT"]
             params << "--bisect"
           end
