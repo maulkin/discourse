@@ -159,6 +159,8 @@ task 'docker:test' do
     end
 
     if ENV['PARALLEL_TESTS']
+      @parallel_count = ENV["PARALLEL_COUNT"] || 1
+
       puts "travis_fold:start:prepare_tests" if ENV["TRAVIS"]
       puts "Cleaning up old test tmp data in tmp/test_data"
       `rm -fr tmp/test_data && mkdir -p tmp/test_data/redis && mkdir tmp/test_data/pg`
@@ -179,10 +181,10 @@ task 'docker:test' do
 
       ENV["RAILS_ENV"] = "test"
 
-      @good &&= run_or_fail("bundle exec rake parallel:create[3]")
-      @good &&= run_or_fail("bundle exec rake parallel:migrate[3]")
-      puts "bundle exec rake parallel:spec STARTED"
-      @good &&= run_or_fail("bundle exec rake parallel:spec[3]")
+      @good &&= run_or_fail("bundle exec rake parallel:create[#{@parallel_count}]")
+      @good &&= run_or_fail("bundle exec rake parallel:migrate[#{@parallel_count}]")
+      puts "bundle exec rake parallel:spec STARTED with #{@parallel_count} parallel tests"
+      @good &&= run_or_fail("bundle exec rake parallel:spec[#{@parallel_count}]")
       puts "bundle exec rake parallel:spec ENDED"
     end
   ensure
