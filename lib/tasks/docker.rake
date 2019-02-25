@@ -179,11 +179,10 @@ task 'docker:test' do
 
       ENV["RAILS_ENV"] = "test"
 
-      @good &&= run_or_fail("bundle exec rake parallel:create")
-      @good &&= run_or_fail("bundle exec rake parallel:prepare")
-      @good &&= run_or_fail("bundle exec rake parallel:migrate")
+      @good &&= run_or_fail("bundle exec rake parallel:create[3]")
+      @good &&= run_or_fail("bundle exec rake parallel:migrate[3]")
       puts "bundle exec rake parallel:spec STARTED"
-      @good &&= run_or_fail("bundle exec rake parallel:spec")
+      @good &&= run_or_fail("bundle exec rake parallel:spec[3]")
       puts "bundle exec rake parallel:spec ENDED"
     end
   ensure
