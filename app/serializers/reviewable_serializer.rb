@@ -20,12 +20,16 @@ class ReviewableSerializer < ApplicationSerializer
   has_one :created_by, serializer: BasicUserSerializer, root: 'users'
   has_one :target_created_by, serializer: BasicUserSerializer, root: 'users'
   has_one :topic, serializer: BasicTopicSerializer
-  has_many :reviewable_actions, serializer: ReviewableActionSerializer
   has_many :editable_fields, serializer: ReviewableEditableFieldSerializer, embed: :objects
   has_many :reviewable_scores, serializer: ReviewableScoreSerializer
+  has_many :bundled_actions, serializer: ReviewableBundledActionSerializer
 
   # Used to keep track of our payload attributes
   class_attribute :_payload_for_serialization
+
+  def bundled_actions
+    object.actions_for(scope).bundles
+  end
 
   def reviewable_actions
     object.actions_for(scope).to_a

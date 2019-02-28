@@ -17,11 +17,10 @@ class ReviewableQueuedPost < Reviewable
     if pending? && guardian.can_delete_user?(created_by)
       actions.add(:delete_user) do |action|
         action.icon = 'trash-alt'
-        action.title = 'reviewables.actions.delete_user.title'
+        action.label = 'reviewables.actions.delete_user.title'
         action.confirm_message = 'reviewables.actions.delete_user.confirm'
       end
     end
-
   end
 
   def build_editable_fields(fields, guardian, args)

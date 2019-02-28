@@ -78,7 +78,8 @@
     margin-top: 0.5em;
     display: flex;
 
-    .reviewable-action {
+    .reviewable-action,
+    .reviewable-action-dropdown {
       margin-right: 0.5em;
 
       &.delete-user {

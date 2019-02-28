@@ -1,7 +1,7 @@
 class ReviewablesController < ApplicationController
   requires_login
 
-  PER_PAGE = 30
+  PER_PAGE = 10
 
   before_action :version_required, only: [:update, :perform]
 
@@ -30,7 +30,8 @@ class ReviewablesController < ApplicationController
     json = {
       reviewables: reviewables.map do |r|
         result = r.serializer.new(r, root: nil, hash: hash, scope: guardian).as_json
-        hash[:reviewable_actions].uniq!
+        hash[:bundled_actions].uniq!
+        hash['actions'].uniq!
         result
       end,
       meta: {

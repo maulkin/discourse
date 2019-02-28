@@ -10,21 +10,27 @@ class ReviewableFlaggedPost < Reviewable
     return unless pending?
     return if post.blank?
 
-    build_action(actions, :agree_and_keep, 'thumbs-up')
+    agree = actions.add_bundle("#{id}-agree", icon: 'thumbs-up', label: 'reviewables.actions.agree.title')
+
+    build_action(actions, :agree_and_keep, icon: 'thumbs-up', bundle: agree)
+    if guardian.is_staff?
+      build_action(actions, :agree_and_suspend, icon: 'ban', bundle: agree, client_action: 'suspend')
+      build_action(actions, :agree_and_silence, icon: 'microphone-slash', bundle: agree, client_action: 'silence')
+    end
 
     if post.user_deleted?
-      build_action(actions, :agree_and_restore, 'far-eye')
+      build_action(actions, :agree_and_restore, icon: 'far-eye', bundle: agree)
     elsif !post.hidden?
-      build_action(actions, :agree_and_hide, 'far-eye-slash')
+      build_action(actions, :agree_and_hide, icon: 'far-eye-slash', bundle: agree)
     end
 
     if post.hidden?
-      build_action(actions, :disagree_and_restore, 'thumbs-down')
+      build_action(actions, :disagree_and_restore, icon: 'thumbs-down')
     else
-      build_action(actions, :disagree, 'thumbs-down')
+      build_action(actions, :disagree, icon: 'thumbs-down')
     end
 
-    build_action(actions, :ignore, 'external-link-alt')
+    build_action(actions, :ignore, icon: 'external-link-alt')
   end
 
   def perform_ignore(performed_by, args)
@@ -53,6 +59,10 @@ class ReviewableFlaggedPost < Reviewable
   def perform_agree_and_keep(performed_by, args)
     agree(performed_by, args)
   end
+
+  # Penalties are handled by the modal after the action is performed
+  alias_method :perform_agree_and_suspend, :perform_agree_and_keep
+  alias_method :perform_agree_and_silence, :perform_agree_and_keep
 
   def perform_agree_and_hide(performed_by, args)
     agree(performed_by, args) do |pa|
@@ -189,11 +199,12 @@ class ReviewableFlaggedPost < Reviewable
 
 protected
 
-  def build_action(actions, id, icon)
-    actions.add(id) do |action|
+  def build_action(actions, id, icon:, bundle: nil, client_action: nil)
+    actions.add(id, bundle: bundle) do |action|
       action.icon = icon
-      action.title = "reviewables.actions.#{id}.title"
+      action.label = "reviewables.actions.#{id}.title"
       action.description = "reviewables.actions.#{id}.description"
+      action.client_action = client_action
     end
   end
 

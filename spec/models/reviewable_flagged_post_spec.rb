@@ -52,6 +52,8 @@ RSpec.describe ReviewableFlaggedPost, type: :model do
         actions = reviewable.actions_for(guardian)
         expect(actions.has?(:agree_and_hide)).to eq(true)
         expect(actions.has?(:agree_and_keep)).to eq(true)
+        expect(actions.has?(:agree_and_silence)).to eq(true)
+        expect(actions.has?(:agree_and_suspend)).to eq(true)
         expect(actions.has?(:disagree)).to eq(true)
         expect(actions.has?(:ignore)).to eq(true)
 

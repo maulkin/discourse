@@ -4304,9 +4304,17 @@ en:
     missing_version: "You must supply a version parameter"
     conflict: "There was an update conflict preventing you from doing that."
     actions:
+      agree:
+        title: "Agree..."
       agree_and_keep:
         title: "Keep Post"
         description: "Agree with flag and keep the post unchanged."
+      agree_and_suspend:
+        title: "Suspend User"
+        description: "Agree with flag and suspend the user."
+      agree_and_silence:
+        title: "Silence User"
+        description: "Agree with flag and silence the user."
       agree_and_restore:
         title: "Restore Post"
         description: "Restore the post so that all users can see it."

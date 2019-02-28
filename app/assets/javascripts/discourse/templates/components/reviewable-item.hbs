@@ -46,13 +46,8 @@
         action=(action "cancelEdit")
         label="review.cancel"}}
     {{else}}
-      {{#each reviewable.reviewable_actions as |a|}}
-        {{d-button
-          class=(concat "reviewable-action " (dasherize a.id))
-          disabled=updating
-          icon=a.icon
-          action=(action "perform" a)
-          translatedLabel=a.title}}
+      {{#each reviewable.bundled_actions as |bundle|}}
+        {{reviewable-bundled-action bundle=bundle performAction=(action "perform")}}
       {{/each}}
 
       {{#if reviewable.can_edit}}
