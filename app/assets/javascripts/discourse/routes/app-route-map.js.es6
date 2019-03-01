@@ -125,7 +125,6 @@ export default function() {
       );
 
       this.route("badges");
-      this.route("flaggedPosts", { path: "/flagged-posts" });
       this.route("deletedPosts", { path: "/deleted-posts" });
 
       this.route(

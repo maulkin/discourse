@@ -18,7 +18,7 @@ class ReviewableFlaggedPost < Reviewable
       build_action(actions, :agree_and_silence, icon: 'microphone-slash', bundle: agree, client_action: 'silence')
     end
 
-    if potential_spam? && guardian.can_delete_all_posts?(target_created_by)
+    if can_delete_spammer = potential_spam? && guardian.can_delete_all_posts?(target_created_by)
       build_action(
         actions,
         :delete_spammer,
@@ -41,6 +41,12 @@ class ReviewableFlaggedPost < Reviewable
     end
 
     build_action(actions, :ignore, icon: 'external-link-alt')
+
+    if guardian.is_staff?
+      delete = actions.add_bundle("#{id}-delete", icon: "far-trash-alt", label: "reviewables.actions.delete.title")
+      build_action(actions, :delete_and_ignore, icon: 'external-link-alt', bundle: delete)
+      build_action(actions, :delete_and_agree, icon: 'thumbs-up', bundle: delete)
+    end
   end
 
   def perform_ignore(performed_by, args)
@@ -133,8 +139,7 @@ class ReviewableFlaggedPost < Reviewable
   end
 
   def perform_disagree(performed_by, args)
-
-    # -1 is the automatic system cleary
+    # -1 is the automatic system clear
     action_type_ids =
       if performed_by.id == Discourse::SYSTEM_USER_ID
         PostActionType.auto_action_flag_types.values
@@ -175,6 +180,18 @@ class ReviewableFlaggedPost < Reviewable
     end
 
     create_result(:success, :rejected) { |result| result.recalculate_score = true }
+  end
+
+  def perform_delete_and_ignore(performed_by, args)
+    result = perform_ignore(performed_by, args)
+    PostDestroyer.new(performed_by, post).destroy
+    result
+  end
+
+  def perform_delete_and_agree(performed_by, args)
+    result = agree(performed_by, args)
+    PostDestroyer.new(performed_by, post).destroy
+    result
   end
 
   def update_flag_stats(status, user_ids)

@@ -47,7 +47,10 @@
         label="review.cancel"}}
     {{else}}
       {{#each reviewable.bundled_actions as |bundle|}}
-        {{reviewable-bundled-action bundle=bundle performAction=(action "perform")}}
+        {{reviewable-bundled-action
+          bundle=bundle
+          performAction=(action "perform")
+          reviewableUpdating=updating}}
       {{/each}}
 
       {{#if reviewable.can_edit}}

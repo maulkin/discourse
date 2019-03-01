@@ -63,6 +63,8 @@ RSpec.describe ReviewableFlaggedPost, type: :model do
         expect(actions.has?(:delete_spammer)).to eq(true)
         expect(actions.has?(:disagree)).to eq(true)
         expect(actions.has?(:ignore)).to eq(true)
+        expect(actions.has?(:delete_and_ignore)).to eq(true)
+        expect(actions.has?(:delete_and_agree)).to eq(true)
 
         expect(actions.has?(:disagree_and_restore)).to eq(false)
       end
@@ -133,6 +135,20 @@ RSpec.describe ReviewableFlaggedPost, type: :model do
       reviewable.perform(moderator, :ignore)
       expect(reviewable).to be_ignored
       expect(score.reload).to be_ignored
+    end
+
+    it "delete_and_defer ignores the flags and deletes post" do
+      reviewable.perform(moderator, :delete_and_ignore)
+      expect(reviewable).to be_ignored
+      expect(score.reload).to be_ignored
+      expect(post.reload.deleted_at).to be_present
+    end
+
+    it "delete_and_agree agrees with the flags and deletes post" do
+      reviewable.perform(moderator, :delete_and_agree)
+      expect(reviewable).to be_approved
+      expect(score.reload).to be_agreed
+      expect(post.reload.deleted_at).to be_present
     end
 
     it "disagrees with the flags" do

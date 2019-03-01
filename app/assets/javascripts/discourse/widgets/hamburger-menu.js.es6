@@ -55,14 +55,6 @@ export default createWidget("hamburger-menu", {
         className: "admin-link",
         icon: "wrench",
         label: "admin_title"
-      },
-      {
-        href: `/admin/flags/${flagsPath}`,
-        className: "flagged-posts-link",
-        icon: "flag",
-        label: "flags_title",
-        badgeClass: "flagged-posts",
-        badgeTitle: "notifications.total_flagged"
       }
     ];
 
