@@ -273,6 +273,7 @@ private
       target: @post,
       topic: @post.topic,
       reviewable_by_moderator: true,
+      potential_spam: @post_action_type_id == PostActionType.types[:spam],
       payload: {
         targets_topic: @targets_topic
       }

@@ -64,7 +64,8 @@ class Reviewable < ActiveRecord::Base
     topic: nil,
     created_by:,
     payload: nil,
-    reviewable_by_moderator: false
+    reviewable_by_moderator: false,
+    potential_spam: true
   )
     target_created_by_id = target.is_a?(Post) ? target.user_id : nil
 
@@ -78,10 +79,15 @@ class Reviewable < ActiveRecord::Base
       created_by: created_by,
       category_id: category_id,
       reviewable_by_moderator: reviewable_by_moderator,
-      payload: payload
+      payload: payload,
+      potential_spam: potential_spam
     )
   rescue ActiveRecord::RecordNotUnique
-    where(target: target).update_all(status: statuses[:pending])
+    updates = {
+      status: statuses[:pending]
+    }
+    updates[:potential_spam] = true if potential_spam
+    where(target: target).update_all(updates)
     find_by(target: target).tap { |r| r.log_history(:transitioned, created_by) }
   end
 

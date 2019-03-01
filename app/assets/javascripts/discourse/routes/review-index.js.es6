@@ -1,9 +1,4 @@
 export default Discourse.Route.extend({
-  queryParams: {
-    min_score: { refreshModel: true },
-    type: { refreshModel: true }
-  },
-
   model(params) {
     return this.store.findAll("reviewable", params);
   },
@@ -18,5 +13,11 @@ export default Discourse.Route.extend({
       min_score: meta.min_score,
       filterScore: meta.min_score
     });
+  },
+
+  actions: {
+    refreshRoute() {
+      this.refresh();
+    }
   }
 });

@@ -6,9 +6,18 @@ RSpec.describe ReviewableFlaggedPost, type: :model do
     ReviewableFlaggedPost.default_visible.pending.count
   end
 
+  let(:user) { Fabricate(:user) }
+  let(:post) { Fabricate(:post) }
+  let(:moderator) { Fabricate(:moderator) }
+
+  it "sets `potential_spam` when a spam flag is added" do
+    reviewable = PostActionCreator.off_topic(user, post).reviewable
+    expect(reviewable.potential_spam?).to eq(false)
+    PostActionCreator.spam(Fabricate(:user), post)
+    expect(reviewable.reload.potential_spam?).to eq(true)
+  end
+
   describe "flag_stats" do
-    let(:user) { Fabricate(:user) }
-    let(:post) { Fabricate(:post) }
     let(:user_post) { Fabricate(:post, user: user) }
     let(:reviewable) { PostActionCreator.spam(user, post).reviewable }
 
@@ -39,9 +48,6 @@ RSpec.describe ReviewableFlaggedPost, type: :model do
   end
 
   describe "actions" do
-    let(:user) { Fabricate(:user) }
-    let(:moderator) { Fabricate(:moderator) }
-    let(:post) { Fabricate(:post) }
     let!(:result) { PostActionCreator.spam(user, post) }
     let(:reviewable) { result.reviewable }
     let(:score) { result.reviewable_score }
@@ -54,6 +60,7 @@ RSpec.describe ReviewableFlaggedPost, type: :model do
         expect(actions.has?(:agree_and_keep)).to eq(true)
         expect(actions.has?(:agree_and_silence)).to eq(true)
         expect(actions.has?(:agree_and_suspend)).to eq(true)
+        expect(actions.has?(:delete_spammer)).to eq(true)
         expect(actions.has?(:disagree)).to eq(true)
         expect(actions.has?(:ignore)).to eq(true)
 
@@ -70,28 +77,56 @@ RSpec.describe ReviewableFlaggedPost, type: :model do
         expect(reviewable.actions_for(guardian).has?(:agree_and_hide)).to eq(false)
         expect(reviewable.actions_for(guardian).has?(:disagree_and_restore)).to eq(true)
       end
+
+      it "won't return the penalty options if the user is not regular" do
+        post.user.update(moderator: true)
+        expect(reviewable.actions_for(guardian).has?(:agree_and_silence)).to eq(false)
+        expect(reviewable.actions_for(guardian).has?(:agree_and_suspend)).to eq(false)
+      end
     end
 
-    it "agrees with the flags and hides the post" do
+    it "agree_and_keep agrees with the flags and keeps the post" do
       reviewable.perform(moderator, :agree_and_keep)
       expect(reviewable).to be_approved
       expect(score.reload).to be_agreed
       expect(post).not_to be_hidden
     end
 
-    it "agrees with the flags and hides the post" do
+    it "agree_and_suspend agrees with the flags and keeps the post" do
+      reviewable.perform(moderator, :agree_and_suspend)
+      expect(reviewable).to be_approved
+      expect(score.reload).to be_agreed
+      expect(post).not_to be_hidden
+    end
+
+    it "agree_and_silence agrees with the flags and keeps the post" do
+      reviewable.perform(moderator, :agree_and_silence)
+      expect(reviewable).to be_approved
+      expect(score.reload).to be_agreed
+      expect(post).not_to be_hidden
+    end
+
+    it "agree_and_hide agrees with the flags and hides the post" do
       reviewable.perform(moderator, :agree_and_hide)
       expect(reviewable).to be_approved
       expect(score.reload).to be_agreed
       expect(post).to be_hidden
     end
 
-    it "agrees with the flags and restores the post" do
+    it "agree_and_restore agrees with the flags and restores the post" do
       post.update(user_deleted: true)
       reviewable.perform(moderator, :agree_and_restore)
       expect(reviewable).to be_approved
       expect(score.reload).to be_agreed
       expect(post.user_deleted?).to eq(false)
+    end
+
+    it "supports deleting a spammer" do
+      reviewable.perform(moderator, :delete_spammer)
+      expect(reviewable).to be_approved
+      expect(score.reload).to be_agreed
+      expect(post.reload.deleted_at).to be_present
+      expect(User.find_by(id: reviewable.target_created_by_id)).to be_blank
     end
 
     it "ignores the flags" do
@@ -117,10 +152,6 @@ RSpec.describe ReviewableFlaggedPost, type: :model do
   end
 
   describe "pending count" do
-    let(:user) { Fabricate(:user) }
-    let(:moderator) { Fabricate(:moderator) }
-    let(:post) { Fabricate(:post) }
-
     it "increments the numbers correctly" do
       expect(pending_count).to eq(0)
 

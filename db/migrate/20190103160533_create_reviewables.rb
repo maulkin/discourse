@@ -17,6 +17,7 @@ class CreateReviewables < ActiveRecord::Migration[5.2]
       t.integer :category_id, null: true
       t.integer :topic_id, null: true
       t.float :score, null: false, default: 0
+      t.boolean :potential_spam, null: false, default: false
 
       # Polymorphic relation of reviewable thing
       t.integer :target_id, null: true

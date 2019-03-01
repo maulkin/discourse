@@ -373,7 +373,7 @@ en:
           title: "Type:"
           all: "(all types)"
         minimum_score: "Minimum Score:"
-        apply: "Apply"
+        refresh: "Refresh"
       conversation:
         view_full: "view full conversation"
       scores:

@@ -95,12 +95,18 @@ class MigrateReviewableFlaggedPosts < ActiveRecord::Migration[5.2]
 
     execute(<<~SQL)
       UPDATE reviewables
-      SET SCORE = COALESCE((
+      SET score = COALESCE((
         SELECT sum(score)
         FROM reviewable_scores AS rs
         WHERE rs.reviewable_id = reviewables.id
           AND rs.status = 0
-      ), 0)
+      ), 0),
+      potential_spam = EXISTS(
+        SELECT 1
+        FROM reviewable_scores AS rs
+        WHERE rs.reviewable_id = reviewables.id
+          AND rs.reviewable_score_type = 8
+      )
     SQL
   end
 

@@ -13,9 +13,19 @@ class ReviewableFlaggedPost < Reviewable
     agree = actions.add_bundle("#{id}-agree", icon: 'thumbs-up', label: 'reviewables.actions.agree.title')
 
     build_action(actions, :agree_and_keep, icon: 'thumbs-up', bundle: agree)
-    if guardian.is_staff?
+    if guardian.can_suspend?(target_created_by)
       build_action(actions, :agree_and_suspend, icon: 'ban', bundle: agree, client_action: 'suspend')
       build_action(actions, :agree_and_silence, icon: 'microphone-slash', bundle: agree, client_action: 'silence')
+    end
+
+    if potential_spam? && guardian.can_delete_all_posts?(target_created_by)
+      build_action(
+        actions,
+        :delete_spammer,
+        icon: 'exclamation-triangle',
+        bundle: agree,
+        confirm: true
+      )
     end
 
     if post.user_deleted?
@@ -56,13 +66,53 @@ class ReviewableFlaggedPost < Reviewable
     create_result(:success, :ignored) { |result| result.recalculate_score = true }
   end
 
-  def perform_agree_and_keep(performed_by, args)
-    agree(performed_by, args)
+  def agree(performed_by, args)
+    actions = PostAction.active
+      .where(post_id: target_id)
+      .where(post_action_type_id: PostActionType.notify_flag_types.values)
+
+    trigger_spam = false
+    actions.each do |action|
+      action.agreed_at = Time.zone.now
+      action.agreed_by_id = performed_by.id
+      # so callback is called
+      action.save
+      action.add_moderator_post_if_needed(performed_by, :agreed, args[:post_was_deleted])
+      trigger_spam = true if action.post_action_type_id == PostActionType.types[:spam]
+    end
+
+    update_flag_stats(:agreed, actions.map(&:user_id))
+
+    DiscourseEvent.trigger(:confirmed_spam_post, post) if trigger_spam
+
+    if actions.first.present?
+      DiscourseEvent.trigger(:flag_reviewed, post)
+      DiscourseEvent.trigger(:flag_agreed, actions.first)
+      yield(actions.first) if block_given?
+    end
+
+    create_result(:success, :approved) { |result| result.recalculate_score = true }
   end
 
   # Penalties are handled by the modal after the action is performed
-  alias_method :perform_agree_and_suspend, :perform_agree_and_keep
-  alias_method :perform_agree_and_silence, :perform_agree_and_keep
+  alias_method :perform_agree_and_keep, :agree
+  alias_method :perform_agree_and_suspend, :agree
+  alias_method :perform_agree_and_silence, :agree
+
+  def perform_delete_spammer(performed_by, args)
+    UserDestroyer.new(performed_by).destroy(
+      post.user,
+      delete_posts: true,
+      prepare_for_destroy: true,
+      block_email: true,
+      block_urls: true,
+      block_ip: true,
+      delete_as_spammer: true,
+      context: "review"
+    )
+
+    agree(performed_by, args)
+  end
 
   def perform_agree_and_hide(performed_by, args)
     agree(performed_by, args) do |pa|
@@ -169,42 +219,16 @@ class ReviewableFlaggedPost < Reviewable
     result
   end
 
-  def agree(performed_by, args)
-    actions = PostAction.active
-      .where(post_id: target_id)
-      .where(post_action_type_id: PostActionType.notify_flag_types.values)
-
-    trigger_spam = false
-    actions.each do |action|
-      action.agreed_at = Time.zone.now
-      action.agreed_by_id = performed_by.id
-      # so callback is called
-      action.save
-      action.add_moderator_post_if_needed(performed_by, :agreed, args[:post_was_deleted])
-      trigger_spam = true if action.post_action_type_id == PostActionType.types[:spam]
-    end
-
-    update_flag_stats(:agreed, actions.map(&:user_id))
-
-    DiscourseEvent.trigger(:confirmed_spam_post, post) if trigger_spam
-
-    if actions.first.present?
-      DiscourseEvent.trigger(:flag_reviewed, post)
-      DiscourseEvent.trigger(:flag_agreed, actions.first)
-      yield(actions.first) if block_given?
-    end
-
-    create_result(:success, :approved) { |result| result.recalculate_score = true }
-  end
-
 protected
 
-  def build_action(actions, id, icon:, bundle: nil, client_action: nil)
+  def build_action(actions, id, icon:, bundle: nil, client_action: nil, confirm: false)
     actions.add(id, bundle: bundle) do |action|
+      prefix = "reviewables.actions.#{id}"
       action.icon = icon
-      action.label = "reviewables.actions.#{id}.title"
-      action.description = "reviewables.actions.#{id}.description"
+      action.label = "#{prefix}.title"
+      action.description = "#{prefix}.description"
       action.client_action = client_action
+      action.confirm_message = "#{prefix}.confirm" if confirm
     end
   end
 

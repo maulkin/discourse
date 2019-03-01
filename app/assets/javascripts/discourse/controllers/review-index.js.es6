@@ -28,9 +28,10 @@ export default Ember.Controller.extend({
       this.set("reviewables", newList);
     },
 
-    apply() {
+    refresh() {
       this.set("type", this.get("filterType"));
       this.set("min_score", this.get("filterScore"));
+      this.send("refreshRoute");
     },
 
     loadMore() {

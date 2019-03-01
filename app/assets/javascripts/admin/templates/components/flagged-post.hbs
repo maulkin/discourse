@@ -70,10 +70,6 @@
 
     <div class='flagged-post-controls'>
       {{#if canAct}}
-        {{admin-agree-flag-dropdown
-          post=flaggedPost
-          removeAfter=(action "removeAfter") }}
-
         {{admin-delete-flag-dropdown
           post=flaggedPost
           removeAfter=(action "removeAfter")}}
